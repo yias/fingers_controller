@@ -31,6 +31,8 @@ void updateFingersPose(const geometry_msgs::PoseArray& msg){
 
 }
 
+
+
 geometry_msgs::PoseArray getdesiredPose(std::vector<Eigen::Vector3d> desPose){
     geometry_msgs::PoseArray msg;
 
@@ -74,13 +76,13 @@ int main(int argc, char** argv){
     ros::Subscriber fingers_sub = _n.subscribe("/allegroHand_0/ft_pos", 1,  updateFingersPose);
 
     // open position
-    // Eigen::Vector3d index_target_pos(0.00, -0.054, 0.227);
+    Eigen::Vector3d index_target_pos(0.00, -0.054, 0.227);
     Eigen::Vector3d middle_target_pos(0.027, -0.00, 0.22);
     Eigen::Vector3d ring_target_pos(0.022, 0.053, 0.22);
     Eigen::Vector3d thumb_target_pos(0.022, 0.053, 0.22);
 
     // detect position
-    Eigen::Vector3d index_target_pos(0.11, -0.067, 0.12);
+    // Eigen::Vector3d index_target_pos(0.11, -0.067, 0.12);
 
     // Eigen::Vector3d middle_target_pos(0.11, -0.012, 0.098);
     // Eigen::Vector3d ring_target_pos(0.098, 0.026, 0.073);

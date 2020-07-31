@@ -42,3 +42,8 @@ add_executable(fingers_controller src/finger_controller.cpp)
 target_include_directories(fingers_controller PUBLIC include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
 target_link_libraries(fingers_controller ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
 add_dependencies(fingers_controller ${PROJECT_NAME}_gencpp)
+
+add_executable(fbft_controller src/fingers_biotac_ft.cpp)
+target_include_directories(fbft_controller PUBLIC include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
+target_link_libraries(fbft_controller ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
+add_dependencies(fbft_controller ${PROJECT_NAME}_gencpp)
