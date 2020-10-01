@@ -5,6 +5,7 @@
 #include "geometry_msgs/PoseArray.h"
 #include "geometry_msgs/WrenchStamped.h"
 #include "std_msgs/Float64.h"
+#include <biotac_interface/biotacMsg.h>
 
 #include <string>
 #include <vector>

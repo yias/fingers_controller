@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   geometry_msgs
+  biotac_interface
+  emg_interface
 )
 
 find_package(Eigen3 REQUIRED eigen3) 
@@ -23,6 +25,8 @@ catkin_package(
  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs
 #  DEPENDS system_lib
 )
+
+# find_package(emg_interface)
 
 ###########
 ## Build ##

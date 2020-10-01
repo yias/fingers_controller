@@ -55,5 +55,9 @@
         "valarray": "cpp",
         "algorithm": "cpp",
         "memory": "cpp"
-    }
+    },
+    "python.autoComplete.extraPaths": [
+        "/home/iason/allegro_ws/devel/lib/python2.7/dist-packages",
+        "/opt/ros/melodic/lib/python2.7/dist-packages"
+    ]
 }
