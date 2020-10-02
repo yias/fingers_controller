@@ -9,16 +9,87 @@
 #include <Eigen/Dense>
 #include <iostream>
 
+#include <thread>
+#include <mutex>
+#include <termios.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/ioctl.h>
+#include <sys/select.h>
+
+
+
+const double T_PI = 3.14159265359;
 
 std::vector<Eigen::Vector3d> _fingersPosition;       // desired target position
 std::vector<Eigen::Vector4d> _fingersOrientation;    // desired target orientation
 
+int kb_choice = 0;
+bool isRunning;
+std::mutex threadMutex;
+
+int kbhit() {
+    static const int STDIN = 0;
+    static bool initialized = false;
+
+    if (! initialized) {
+        // Use termios to turn off line buffering
+        termios term;
+        tcgetattr(STDIN, &term);
+        term.c_lflag &= ~ICANON;
+        tcsetattr(STDIN, TCSANOW, &term);
+        setbuf(stdin, NULL);
+        initialized = true;
+    }
+
+    int bytesWaiting;
+    ioctl(STDIN, FIONREAD, &bytesWaiting);
+    return bytesWaiting;
+}
+
+int getch(void)
+{
+    struct termios oldattr, newattr;
+    int ch;
+    tcgetattr( STDIN_FILENO, &oldattr );
+    newattr = oldattr;
+    newattr.c_lflag &= ~( ICANON | ECHO );
+    tcsetattr( STDIN_FILENO, TCSANOW, &newattr );
+    ch = getchar();
+    tcsetattr( STDIN_FILENO, TCSANOW, &oldattr );
+    return ch;
+}
+
+
+void checkKeyBoard(){
+    
+    int key;
+
+    while(isRunning){
+        if (kbhit()){
+            key = getch();
+            switch (key)
+            {
+            case 'o':
+                kb_choice = 0;
+                break;
+            case 'c':
+                kb_choice = 1;
+                break;
+            default:
+                std::cout << "\nNot available choice!! \nType 'o' for \"open\" or 'c' for \"close\" " << std::endl;
+                break;
+            }
+            std::cout << std::endl;
+        }
+    }
+}
 
 
 void updateFingersPose(const geometry_msgs::PoseArray& msg){
 
     /*
-    *  callback function for listening to the desired pose of the fingertips
+    *  callback function for listening to the real pose of the fingertips
     *  
     */
 //    std::cout<< "in "
@@ -33,41 +104,41 @@ void updateFingersPose(const geometry_msgs::PoseArray& msg){
 
 
 
-geometry_msgs::PoseArray getdesiredPose(std::vector<Eigen::Vector3d> desPose, std::vector<Eigen::Vector4d> desOrient){
+geometry_msgs::PoseArray setDesiredPose(std::vector<Eigen::Vector3d> desPos, std::vector<Eigen::Vector4d> desOrient){
     geometry_msgs::PoseArray msg;
 
     msg.poses.resize(_fingersPosition.size());
 
-    std::vector<Eigen::Vector3d> _tmp_fingersPosition = _fingersPosition;
-    std::vector<Eigen::Vector4d> _tmp_fingersOrientation = _fingersOrientation;
+    // std::vector<Eigen::Vector3d> _tmp_fingersPosition = _fingersPosition;
+    // std::vector<Eigen::Vector4d> _tmp_fingersOrientation = _fingersOrientation;
 
-    _tmp_fingersPosition[0] = desPose[0];
-    _tmp_fingersPosition[1] = desPose[1];
-    _tmp_fingersPosition[2] = desPose[2];
-    _tmp_fingersPosition[3] = desPose[3];
+    // _tmp_fingersPosition[0] = desPos[0];
+    // _tmp_fingersPosition[1] = desPos[1];
+    // _tmp_fingersPosition[2] = desPos[2];
+    // _tmp_fingersPosition[3] = desPos[3];
 
-    _tmp_fingersOrientation[0] = desOrient[0];
-    _tmp_fingersOrientation[1] = desOrient[1];
-    _tmp_fingersOrientation[2] = desOrient[2];
-    _tmp_fingersOrientation[3] = desOrient[3];
+    // _tmp_fingersOrientation[0] = desOrient[0];
+    // _tmp_fingersOrientation[1] = desOrient[1];
+    // _tmp_fingersOrientation[2] = desOrient[2];
+    // _tmp_fingersOrientation[3] = desOrient[3];
 
     for (size_t fngr=0; fngr<_fingersPosition.size(); fngr++){
 
         // assign the position and orientation values to the message
-        msg.poses[fngr].position.x = _tmp_fingersPosition[fngr](0);
-        msg.poses[fngr].position.y = _tmp_fingersPosition[fngr](1);
-        msg.poses[fngr].position.z = _tmp_fingersPosition[fngr](2);
+        msg.poses[fngr].position.x = desPos[fngr](0);
+        msg.poses[fngr].position.y = desPos[fngr](1);
+        msg.poses[fngr].position.z = desPos[fngr](2);
 
-        msg.poses[fngr].orientation.w = _tmp_fingersOrientation[fngr](0);
-        msg.poses[fngr].orientation.x = _tmp_fingersOrientation[fngr](1);
-        msg.poses[fngr].orientation.y = _tmp_fingersOrientation[fngr](2);
-        msg.poses[fngr].orientation.z = _tmp_fingersOrientation[fngr](3);
+        msg.poses[fngr].orientation.w = desOrient[fngr](0);
+        msg.poses[fngr].orientation.x = desOrient[fngr](1);
+        msg.poses[fngr].orientation.y = desOrient[fngr](2);
+        msg.poses[fngr].orientation.z = desOrient[fngr](3);
     }
 
     return msg;
 }
 
-Eigen::Vector4d ToQuaternion(double yaw, double pitch, double roll) // yaw (Z), pitch (Y), roll (X)
+Eigen::Vector4d ToQuaternion(double yaw, double pitch, double roll) // yaw (Z-axis), pitch (Y-axis), roll (X-axis)
 {
     // Abbreviations for the various angular functions
     double cy = cos(yaw * 0.5);
@@ -90,28 +161,33 @@ Eigen::Vector4d ToQuaternion(double yaw, double pitch, double roll) // yaw (Z), 
 int main(int argc, char** argv){
 
 
+    std::thread kbThread;                       // the thread for getting input from keyboard
+
     _fingersPosition = std::vector<Eigen::Vector3d>(4);
     _fingersOrientation = std::vector<Eigen::Vector4d>(4);
 
-    ros::init(argc, argv, "fingers_controller");
+    ros::init(argc, argv, "fingers_position_controller_example");
 
     ros::NodeHandle _n;
 
     ros::Publisher fingers_pub = _n.advertise<geometry_msgs::PoseArray>("/allegroHand_0/ft_pose_cmd", 1);
     ros::Subscriber fingers_sub = _n.subscribe("/allegroHand_0/ft_pos", 1,  updateFingersPose);
 
+    geometry_msgs::PoseArray pub_msg;
+
+
     // open position
     Eigen::Vector3d index_target_pos(0.05, -0.054, 0.21);
-    Eigen::Vector4d index_target_orient = ToQuaternion(0.0, 1.0, 0.0);
+    Eigen::Vector4d index_target_orient = ToQuaternion(0.0, 60*T_PI/180, 0.0);
 
     Eigen::Vector3d middle_target_pos(0.05, -0.00, 0.21);
-    Eigen::Vector4d middle_target_orient = ToQuaternion(0.0, 1.0, 0.0);
+    Eigen::Vector4d middle_target_orient = ToQuaternion(0.0, 60*T_PI/180, 0.0);
     
     Eigen::Vector3d ring_target_pos(0.05, 0.053, 0.21);
-    Eigen::Vector4d ring_target_orient = ToQuaternion(0.0, 1.0, 0.0);
+    Eigen::Vector4d ring_target_orient = ToQuaternion(0.0, 60*T_PI/180, 0.0);
     
-    Eigen::Vector3d thumb_target_pos(0.09, -0.10, 0.05);
-    Eigen::Vector4d thumb_target_orient = ToQuaternion(0.0, 0.0, 0.0);
+    Eigen::Vector3d thumb_target_pos(0.12, -0.08, 0.03);
+    Eigen::Vector4d thumb_target_orient = ToQuaternion(17*T_PI/180, -106*T_PI/180, -123*T_PI/180);
 
     std::vector<Eigen::Vector3d> open_position(4);
     open_position[0] = index_target_pos;
@@ -125,18 +201,18 @@ int main(int argc, char** argv){
     open_orientation[2] = ring_target_orient;
     open_orientation[3] = thumb_target_orient;
 
-    // detect position
+    // close configuration position
     index_target_pos = Eigen::Vector3d(0.10, -0.05, 0.14);
-    index_target_orient = ToQuaternion(0.0, 120*3.14/180, 0.0);
+    index_target_orient = ToQuaternion(0.0, 120*T_PI/180, 0.0);
 
     middle_target_pos = Eigen::Vector3d(0.08, 0.00, 0.15);
-    middle_target_orient = ToQuaternion(0.0, 3.14/2, 0.0);
+    middle_target_orient = ToQuaternion(0.0, 90*T_PI/180, 0.0);
 
     ring_target_pos = Eigen::Vector3d(0.08, 0.05, 0.15);
-    ring_target_orient = ToQuaternion(0.0, 90*3.14/180, 0.0);
+    ring_target_orient = ToQuaternion(0.0, 90*T_PI/180, 0.0);
     
     thumb_target_pos = Eigen::Vector3d(0.10, -0.05, 0.07);
-    thumb_target_orient = ToQuaternion(0.0, -120*3.14/180, 3.14);
+    thumb_target_orient = ToQuaternion(0.0, -120*T_PI/180, 3.14);
 
     std::vector<Eigen::Vector3d> detect_position(4);
     detect_position[0] = index_target_pos;
@@ -151,32 +227,37 @@ int main(int argc, char** argv){
     detect_orientation[3] = thumb_target_orient;
 
 
-    std::vector<Eigen::Vector3d> desiredPos = open_position;
-    desiredPos = detect_position;
+    // std::vector<Eigen::Vector3d> desiredPos = open_position;
+    // desiredPos = detect_position;
 
-    std::vector<Eigen::Vector4d> desiredOrient = open_orientation;
-    desiredOrient=detect_orientation;
-
-    // desiredPos[0] = index_target_pos;
-    // desiredPos[1] = middle_target_pos;
-    // desiredPos[2] = ring_target_pos;
-    // desiredPos[3] = thumb_target_pos;
-
-    // Eigen::Vector3d index_target_pos(0.06, -0.052, 0.144);
-
-    // std::cout << "test\n";
+    // std::vector<Eigen::Vector4d> desiredOrient = open_orientation;
+    // desiredOrient=detect_orientation;
 
     ros::Rate loop_rate(100);
 
+    isRunning = true;
+    kbThread = std::thread(&checkKeyBoard);
+
+    std::cout << "Type 'o' for \"open\" or 'c' for \"close\" " << std::endl;
+
     while(ros::ok()){
-
-
-        geometry_msgs::PoseArray pub_msg = getdesiredPose(desiredPos, desiredOrient);
+        
+        if (kb_choice == 0){
+            pub_msg = setDesiredPose(open_position, open_orientation);
+        }
+        if (kb_choice == 1){
+            pub_msg = setDesiredPose(detect_position, detect_orientation);
+        }
 
         fingers_pub.publish(pub_msg);
 
         ros::spinOnce();
         loop_rate.sleep();
+    }
+
+    isRunning = false;
+    if(kbThread.joinable()){
+        kbThread.join();
     }
 
 
