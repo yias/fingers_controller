@@ -14,6 +14,10 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   biotac_interface
   emg_interface
+  map_msgs
+  # jsk_recognition_msgs
+  # geometric_shapes_msgs
+  # pr2_arm_navigation_tutorials
 )
 
 find_package(Eigen3 REQUIRED eigen3) 
@@ -46,6 +50,11 @@ add_executable(fingers_controller src/finger_controller.cpp)
 target_include_directories(fingers_controller PUBLIC include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
 target_link_libraries(fingers_controller ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
 add_dependencies(fingers_controller ${PROJECT_NAME}_gencpp)
+
+# add_executable(object_node src/add_cylinder.cpp)
+# target_include_directories(object_node PUBLIC include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
+# target_link_libraries(object_node ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
+# add_dependencies(object_node ${PROJECT_NAME}_gencpp)
 
 add_executable(fbft_controller src/fingers_biotac_ft.cpp)
 target_include_directories(fbft_controller PUBLIC include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})

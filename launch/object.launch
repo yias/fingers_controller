@@ -1,0 +1,132 @@
+ <launch>
+
+    <arg name="HAND" default="left"/>
+    <arg name="NUM" default="0"/>
+    <arg name="CONTROLLER" default="sim" />
+    <arg name="BIOTAC" default="false" />
+    <arg name="URDF" default="$(find allegro_manager)/models/urdf/allegro_left.urdf" unless="$(arg BIOTAC)"/>
+    <arg name="URDF" default="$(find allegro_manager)/models/urdf/allegro_left_biotac.urdf" if="$(arg BIOTAC)"/>
+    <arg name="ZEROS" default="$(find allegro_hand_parameters)/zero.yaml" />
+
+    <arg name="AUTO_CAN" default="true" />  <!--If true, ignores CAN_DEVICE. -->
+    <arg name="CAN_DEVICE" default="/dev/pcanusb1" />
+    <arg name="JSP_GUI" default="false" />
+    <arg name="KEYBOARD" default="false" />
+    <arg name="GAZEBO" default="false" />  <!-- use at your own risk -->
+    <arg name="POLLING" default="true"/>
+    <arg name="RESPAWN" default="false"/>
+    <arg name="PARAMS_DIR" default="$(find allegro_hand_parameters)" />
+
+    
+    
+
+    <group>
+        <param name="robot_description" command="cat $(find allegro_hand_description)/allegro_hand_description_$(arg HAND)_melodic.urdf" />
+        <node name="allegroHand_$(arg HAND)_$(arg NUM)"
+                pkg="allegro_hand_controllers"
+                type="allegro_node_$(arg CONTROLLER)"
+                output="screen"
+                clear_params="true"
+                respawn="$(arg RESPAWN)"
+                respawn_delay="2"
+                args="$(arg POLLING)" >
+
+            
+            <remap from="allegroHand/joint_states" to="allegroHand_$(arg NUM)/joint_states"/>
+            <remap from="allegroHand/joint_cmd" to="allegroHand_$(arg NUM)/joint_cmd"/>
+            <remap from="allegroHand/lib_cmd" to="allegroHand_$(arg NUM)/lib_cmd"/>
+            <remap from="allegroHand/torque_cmd" to="allegroHand_$(arg NUM)/torque_cmd"/>
+            <remap from="allegroHand/envelop_torque" to="allegroHand_$(arg NUM)/envelop_torque"/>
+            <remap from="allegroHand/joint_current_states" to="allegroHand_$(arg NUM)/joint_current_states"/>
+            <remap from="allegroHand/joint_desired_states" to="allegroHand_$(arg NUM)/joint_desired_states"/>
+            
+            <rosparam file="$(arg ZEROS)" command="load" />
+
+            <rosparam file="$(arg PARAMS_DIR)/gains_pd.yaml" command="load" />
+            <rosparam file="$(arg PARAMS_DIR)/gains_velSat.yaml" command="load" />
+            <rosparam file="$(arg PARAMS_DIR)/initial_position.yaml" command="load" />
+
+            <param name="/comm/CAN_CH" value="$(arg CAN_DEVICE)"
+                unless="$(arg AUTO_CAN)" />
+            <param name="/comm/CAN_CH"
+                command="$(find allegro_hand_description)/scripts/detect_pcan.py"
+                if="$(arg AUTO_CAN)" />
+
+            <param name="/hand_info/which_hand" value="$(arg HAND)" />
+        </node>
+
+        <node name="joint_states_$(arg NUM)" pkg="joint_state_publisher" type="joint_state_publisher"
+                if="$(arg JSP_GUI)">
+            <remap from="joint_states" to="allegroHand_$(arg NUM)/joint_cmd"/>
+            <param name="use_gui" value="true"/>
+        </node>
+
+        <node name="jointState2tf_$(arg NUM)"
+                pkg="robot_state_publisher"
+                output="screen"
+                type="robot_state_publisher">
+            <remap from="tf" to="allegroHand_$(arg NUM)/tf"/>
+            <remap from="joint_states" to="allegroHand_$(arg NUM)/joint_states"/>
+        </node>
+
+        <node name="hand_ft_controller" pkg="allegro_manager" type="hand_ft_controller" output="screen" args="$(arg URDF)">
+            <remap from="allegroHand_0/joint_states" to="allegroHand_$(arg NUM)/joint_states"/>
+            <remap from="allegroHand_0/joint_cmd" to="allegroHand_$(arg NUM)/joint_cmd"/>
+            <remap from="allegroHand_0/torque_cmd" to="allegroHand_$(arg NUM)/torque_cmd"/>
+            <remap from="allegroHand_0/desiredJointState" to="allegroHand_$(arg NUM)/desiredJointState"/>
+
+            <remap from="allegroHand_0/ft_pose_cmd" to="allegroHand_$(arg NUM)/ft_pose_cmd"/>
+            <remap from="allegroHand_0/ft_torque_cmd" to="allegroHand_$(arg NUM)/ft_torque_cmd"/>
+            <remap from="allegroHand_0/ft_pos" to="allegroHand_$(arg NUM)/ft_pos"/>
+            <remap from="allegroHand_0/Gravity_direction" to="allegroHand_$(arg NUM)/Gravity_direction"/>
+            <remap from="allegroHand_0/Bendingness" to="allegroHand_$(arg NUM)/Bendingness"/>
+            <remap from="allegroHand_0/SpeedGains" to="allegroHand_$(arg NUM)/SpeedGains"/>
+            
+        </node>
+
+        <node name="hand_torque_sim" pkg="allegro_manager" type="hand_torque_sim" output="screen" args="$(arg URDF)">
+            <remap from="allegroHand_0/joint_states" to="allegroHand_$(arg NUM)/joint_states"/>
+            <remap from="allegroHand_0/joint_cmd" to="allegroHand_$(arg NUM)/joint_cmd"/>
+            <remap from="allegroHand_0/torque_cmd" to="allegroHand_$(arg NUM)/torque_cmd"/>
+            
+        </node>
+    </group>
+
+    <group ns="object">
+        <param name="robot_description" textfile="$(find fingers_controller)/models/cylinder.urdf"/>
+        <node pkg="robot_state_publisher" type="robot_state_publisher" name="object_state_publisher" output="screen">
+        <!-- <remap from="tf" to="object/tf"/> -->
+        </node>
+        <node name="joint_states" pkg="joint_state_publisher" type="joint_state_publisher">
+        <remap from="tf" to="object/tf"/>
+        </node>
+        
+        <!-- <node name="joint_states" pkg="joint_state_publisher_gui" type="joint_state_publisher_gui"/> -->
+        
+    </group>
+
+    
+        <!-- <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="1 0 0 0 0 0 1 world object_link 100" /> -->
+
+    <group>
+        <node name="rviz_$(arg NUM)" pkg="rviz" type="rviz" args="-d $(find allegro_hand_description)/allegro_hand_config.rviz" >
+        <!-- <node name="rviz_$(arg NUM)" pkg="rviz" type="rviz" args="-d $(find fingers_controller)/moldes/allegro_hand_config.rviz" > -->
+        <remap from="/tf" to="allegroHand_$(arg NUM)/tf"/>
+        </node>
+
+    </group>
+
+
+    <!-- <node name="gazebo" pkg="gazebo" type="gazebo" args="$(find fingers_controller)/config/experiment_1.world" respawn="false" output="screen"/> -->
+    <!-- <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(find fingers_controller)/config/experiment_1.world"/>
+        <arg name="paused" value="false"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="gui" value="true"/>
+        <arg name="headless" value="false"/>
+        <arg name="debug" value="false"/>
+    </include> -->
+   
+
+    
+ </launch>

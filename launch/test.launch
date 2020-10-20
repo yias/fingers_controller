@@ -1,0 +1,11 @@
+<launch>
+
+
+  <group ns="environment">
+    <param name="robot_description" command="$(find xacro)/xacro --check-order --inorder $(find fingers_controller)/models/test_env.urdf.xacro origin.x:=0 origin.y:=0 origin.z:=0"/>
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+    <!-- <node name="environment_spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param /environment/robot_description -urdf -model environment" respawn="false" output="screen" /> -->
+  </group>
+
+  <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find fingers_controller)/allegro_hand_config.rviz"/>
+</launch>  
