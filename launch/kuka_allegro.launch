@@ -65,7 +65,6 @@
                 pkg="robot_state_publisher"
                 output="screen"
                 type="robot_state_publisher">
-            <!-- <remap from="tf" to="allegroHand_$(arg NUM)/tf"/> -->
             <remap from="joint_states" to="allegroHand_$(arg NUM)/joint_states"/>
         </node>
 
@@ -88,37 +87,59 @@
             <remap from="allegroHand_0/joint_states" to="allegroHand_$(arg NUM)/joint_states"/>
             <remap from="allegroHand_0/joint_cmd" to="allegroHand_$(arg NUM)/joint_cmd"/>
             <remap from="allegroHand_0/torque_cmd" to="allegroHand_$(arg NUM)/torque_cmd"/>
-            
         </node>
     </group>
 
+    <group ns="lwr">
+        <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find single_lwr_robot)/robot/single_lwr_robot.urdf.xacro'"/> 
+        <node name="lwr_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen"/>
+           
+    </group>
 
-    <group ns="object">
+    <!-- GAZEBO -->
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param /lwr/robot_description -urdf -model single_lwr_robot" respawn="false" output="screen" />
+    <!-- enable/disable gui at will, the rviz listens to the simulation -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(find single_lwr_robot)/worlds/simple_environment.world"/>
+        <arg name="paused" value="false"/>
+        <arg name="use_sim_time" value="true"/>
+        <arg name="gui" value="false"/>
+        <arg name="headless" value="false"/>
+        <arg name="debug" value="false"/>
+    </include>
+
+
+    <!-- load robotHW configurations to rosparam server -->
+    <rosparam command="load" file="$(find single_lwr_robot)/config/hw_interface.yaml"/>
+
+    <!-- load all controller configurations to rosparam server -->
+    <rosparam command="load" file="$(find single_lwr_robot)/config/controllers.yaml"/>
+
+    <!-- real robot and controllers -->
+    <group ns="lwr">
+        <!-- spawn only desired controllers in current namespace -->
+        <node name="controller_spawner_js" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="kuka_joint_state_controller"/>
+        <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="joint_controllers"/>
+    </group>
+
+     <group ns="object">
         <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find fingers_controller)/models/objects/$(arg OBJECT).urdf.xacro'"/> 
         <node pkg="robot_state_publisher" type="robot_state_publisher" name="object_state_publisher" output="screen"/>
         <node name="joint_states" pkg="joint_state_publisher" type="joint_state_publisher"/>
         
     </group>
-
     
-    <node pkg="tf" type="static_transform_publisher" name="allegro_object_broadcaster" args="0 0 0 0 0 0 1 hand_root obj_base 100" />
+    <!-- <node pkg="tf" type="static_transform_publisher" name="allegro_object_broadcaster" args="0 0 0 0 0 0 1 hand_root obj_base 100" /> -->
+    <node pkg="tf" type="static_transform_publisher" name="kuka_allegro_broadcaster" args="0 0 0 0 0 0 1 lwr_7_link hand_root 100" />
+    <node pkg="tf" type="static_transform_publisher" name="kuka_object_broadcaster" args="0.6 0 0.3 0 0 0 1 world obj_base 100" />
+
 
     <group>
-        <node name="rviz_$(arg NUM)" pkg="rviz" type="rviz" args="-d $(find fingers_controller)/config/rviz/allegro_object.rviz" >
+        <node name="rviz_$(arg NUM)" pkg="rviz" type="rviz" args="-d '$(find fingers_controller)/config/rviz/kuka_allegro_object.rviz'">
+        <!-- '$(find lwr_simple_example)/launch/rviz/rviz_config.rviz'" > -->
+        <!-- args="-d $(find fingers_controller)/config/rviz/allegro_object.rviz" > -->
         </node>
     </group>
 
 
-    <!-- <node name="gazebo" pkg="gazebo" type="gazebo" args="$(find fingers_controller)/config/experiment_1.world" respawn="false" output="screen"/> -->
-    <!-- <include file="$(find gazebo_ros)/launch/empty_world.launch">
-        <arg name="world_name" value="$(find fingers_controller)/config/experiment_1.world"/>
-        <arg name="paused" value="false"/>
-        <arg name="use_sim_time" value="true"/>
-        <arg name="gui" value="true"/>
-        <arg name="headless" value="false"/>
-        <arg name="debug" value="false"/>
-    </include> -->
-   
-
-    
  </launch>
