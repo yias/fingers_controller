@@ -6,20 +6,41 @@
     <xacro:property name="bodylength_z" value="0.03" />
     <xacro:property name="width" value="0.025" />
     <xacro:property name="opacity" value="0.7" />
-    <xacro:property name="obj_x" value="0.1" />
+    <!-- <xacro:property name="obj_x" value="0.1" />
     <xacro:property name="obj_y" value="-0.02" />
-    <xacro:property name="obj_z" value="0.105" />
+    <xacro:property name="obj_z" value="0.105" /> -->
+    <xacro:property name="obj_x" value="0.0" />
+    <xacro:property name="obj_y" value="0.0" />
+    <xacro:property name="obj_z" value="0.0" />
     <!-- Base link -->
     <link name="obj_base">
-        <origin xyz="0 0 0"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
     </link>
-    <joint name="base_joint" type="revolute">
+    <joint name="joint_x" type="revolute">
+        <axis xyz="1 0 0"/>
         <limit effort="15" lower="-0.47" upper="0.47" velocity="7"/>
         <parent link="obj_base"/>
-        <child link="object_link"/>
-        <origin xyz="0 0 0"/>
+        <child link="virtual_x"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
-    <!-- object link -->
+    <link name="virtual_x"/>
+    <!-- </link> -->
+    <joint name="joint_y" type="revolute">
+        <axis xyz="0 1 0"/>
+        <limit effort="15" lower="-0.47" upper="0.47" velocity="7"/>
+        <parent link="virtual_x"/>
+        <child link="virtual_y"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+    <link name="virtual_y"/>
+    <!-- </link> -->
+    <joint name="joint_z" type="revolute">
+        <axis xyz="0 0 1"/>
+        <limit effort="15" lower="-0.47" upper="0.47" velocity="7"/>
+        <parent link="virtual_y"/>
+        <child link="object_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
     <link name="object_link">
         <visual>
             <geometry>

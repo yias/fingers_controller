@@ -51,10 +51,15 @@ target_include_directories(fingers_controller PUBLIC include ${catkin_INCLUDE_DI
 target_link_libraries(fingers_controller ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
 add_dependencies(fingers_controller ${PROJECT_NAME}_gencpp)
 
-# add_executable(object_node src/add_cylinder.cpp)
-# target_include_directories(object_node PUBLIC include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
-# target_link_libraries(object_node ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
-# add_dependencies(object_node ${PROJECT_NAME}_gencpp)
+add_executable(fingers_trq_controller src/ft_torque_controller.cpp)
+target_include_directories(fingers_trq_controller PUBLIC include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
+target_link_libraries(fingers_trq_controller ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
+add_dependencies(fingers_trq_controller ${PROJECT_NAME}_gencpp)
+
+add_executable(obj_motion_gen_node src/obj_motion_gen_node.cpp)
+target_include_directories(obj_motion_gen_node PUBLIC include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
+target_link_libraries(obj_motion_gen_node ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
+add_dependencies(obj_motion_gen_node ${PROJECT_NAME}_gencpp)
 
 add_executable(fbft_controller src/fingers_biotac_ft.cpp)
 target_include_directories(fbft_controller PUBLIC include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})

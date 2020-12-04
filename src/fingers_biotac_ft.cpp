@@ -126,7 +126,7 @@ int main(int argc, char** argv){
     ros::Publisher force_pub = _n.advertise<std_msgs::Float64>("/ft_sensors/force", 1);
     ros::Publisher torque_pub = _n.advertise<std_msgs::Float64>("/ft_sensors/torque", 1);
 
-    ros::Subscriber fingers_sub = _n.subscribe("/allegroHand_0/ft_pos", 1,  updateFingersPose);
+    ros::Subscriber fingers_sub = _n.subscribe("/allegroHand_0/ft_pose", 1,  updateFingersPose);
     ros::Subscriber ft_sub = _n.subscribe("/ft_sensor/netft_data", 1,  updateFT);
     // ros::Subscriber ft_bias_sub = _n.subscribe()
 

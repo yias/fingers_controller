@@ -77,7 +77,7 @@ void checkKeyBoard(){
                 kb_choice = 1;
                 break;
             default:
-                std::cout << "\nNot available choice!! \nType 'o' for \"open\" or 'c' for \"close\" " << std::endl;
+                std::cout << "\nNot available choice!! \nType 'o' for \"zero torque\" or 'c' to apply torque " << std::endl;
                 break;
             }
             std::cout << std::endl;
@@ -170,30 +170,30 @@ int main(int argc, char** argv){
 
     ros::NodeHandle _n;
 
-    ros::Publisher fingers_pub = _n.advertise<geometry_msgs::PoseArray>("/allegroHand_0/ft_pose_cmd", 1);
+    ros::Publisher fingers_pub = _n.advertise<geometry_msgs::PoseArray>("/allegroHand_0/ft_torque_cmd", 1);
     ros::Subscriber fingers_sub = _n.subscribe("/allegroHand_0/ft_pose", 1,  updateFingersPose);
 
     geometry_msgs::PoseArray pub_msg;
 
 
     // open position
-    Eigen::Vector3d index_target_pos(0.05, -0.054, 0.21);
-    Eigen::Vector4d index_target_orient = ToQuaternion(0.0, 60*T_PI/180, 0.0);
+    Eigen::Vector3d index_torque(0.0, 0.0, 0.0);
+    Eigen::Vector4d index_target_orient = ToQuaternion(0.0, 0.0, 0.0);
 
-    Eigen::Vector3d middle_target_pos(0.05, -0.00, 0.21);
-    Eigen::Vector4d middle_target_orient = ToQuaternion(0.0, 60*T_PI/180, 0.0);
+    Eigen::Vector3d middle_torque(0.0, 0.0, 0.0);
+    Eigen::Vector4d middle_target_orient = ToQuaternion(0.0, 0.0, 0.0);
     
-    Eigen::Vector3d ring_target_pos(0.05, 0.053, 0.21);
-    Eigen::Vector4d ring_target_orient = ToQuaternion(0.0, 60*T_PI/180, 0.0);
+    Eigen::Vector3d ring_torque(0.0, 0.0, 0.0);
+    Eigen::Vector4d ring_target_orient = ToQuaternion(0.0, 0.0, 0.0);
     
-    Eigen::Vector3d thumb_target_pos(0.12, -0.08, 0.03);
-    Eigen::Vector4d thumb_target_orient = ToQuaternion(17*T_PI/180, -106*T_PI/180, -123*T_PI/180);
+    Eigen::Vector3d thumb_torque(0.0, 0.0, 0.0);
+    Eigen::Vector4d thumb_target_orient = ToQuaternion(0.0, 0.0, 0.0);
 
-    std::vector<Eigen::Vector3d> open_position(4);
-    open_position[0] = index_target_pos;
-    open_position[1] = middle_target_pos;
-    open_position[2] = ring_target_pos;
-    open_position[3] = thumb_target_pos;
+    std::vector<Eigen::Vector3d> zero_torque(4);
+    zero_torque[0] = index_torque;
+    zero_torque[1] = middle_torque;
+    zero_torque[2] = ring_torque;
+    zero_torque[3] = thumb_torque;
 
     std::vector<Eigen::Vector4d> open_orientation(4);
     open_orientation[0] = index_target_orient;
@@ -202,23 +202,23 @@ int main(int argc, char** argv){
     open_orientation[3] = thumb_target_orient;
 
     // close configuration position
-    index_target_pos = Eigen::Vector3d(0.10, -0.05, 0.14);
-    index_target_orient = ToQuaternion(0.0, 120*T_PI/180, 0.0);
+    index_torque = Eigen::Vector3d(-0.30, 0.2, 0.0);
+    index_target_orient = ToQuaternion(0.0, 0.0, 0.0);
 
-    middle_target_pos = Eigen::Vector3d(0.08, 0.00, 0.15);
-    middle_target_orient = ToQuaternion(0.0, 90*T_PI/180, 0.0);
+    middle_torque = Eigen::Vector3d(0.0, 0.0, 0.0);
+    middle_target_orient = ToQuaternion(0.0, 0.0, 0.0);
 
-    ring_target_pos = Eigen::Vector3d(0.08, 0.05, 0.15);
-    ring_target_orient = ToQuaternion(0.0, 90*T_PI/180, 0.0);
+    ring_torque = Eigen::Vector3d(0.0, 0.0, 0.0);
+    ring_target_orient = ToQuaternion(0.0, 0.0, 0.0);
     
-    thumb_target_pos = Eigen::Vector3d(0.10, -0.05, 0.07);
-    thumb_target_orient = ToQuaternion(0.0, -120*T_PI/180, 3.14);
+    thumb_torque = Eigen::Vector3d(0.0, 0.0, 0.0);
+    thumb_target_orient = ToQuaternion(0.0, 0.0, 0.0);
 
-    std::vector<Eigen::Vector3d> detect_position(4);
-    detect_position[0] = index_target_pos;
-    detect_position[1] = middle_target_pos;
-    detect_position[2] = ring_target_pos;
-    detect_position[3] = thumb_target_pos;
+    std::vector<Eigen::Vector3d> desired_torque(4);
+    desired_torque[0] = index_torque;
+    desired_torque[1] = middle_torque;
+    desired_torque[2] = ring_torque;
+    desired_torque[3] = thumb_torque;
     
     std::vector<Eigen::Vector4d> detect_orientation(4);
     detect_orientation[0] = index_target_orient;
@@ -238,15 +238,15 @@ int main(int argc, char** argv){
     isRunning = true;
     kbThread = std::thread(&checkKeyBoard);
 
-    std::cout << "Type 'o' for \"open\" or 'c' for \"close\" " << std::endl;
+    std::cout << "Type 'o' for \"zero torque\" or 'c' to apply torque " << std::endl;
 
     while(ros::ok()){
         
         if (kb_choice == 0){
-            pub_msg = setDesiredPose(open_position, open_orientation);
+            pub_msg = setDesiredPose(zero_torque, open_orientation);
         }
         if (kb_choice == 1){
-            pub_msg = setDesiredPose(detect_position, detect_orientation);
+            pub_msg = setDesiredPose(desired_torque, detect_orientation);
         }
 
         fingers_pub.publish(pub_msg);

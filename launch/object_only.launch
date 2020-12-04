@@ -1,0 +1,15 @@
+ <launch>
+
+    <arg name="OBJECT" default="box"/>
+
+    <group ns="object">
+        <param name="robot_description" command="$(find xacro)/xacro '$(find fingers_controller)/models/objects/$(arg OBJECT).urdf.xacro'"/> 
+        <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen"/>
+        <node name="obj_motion_gen_node" pkg="fingers_controller" type="obj_motion_gen_node"/>
+    </group>
+
+
+    <node name="rviz_node" pkg="rviz" type="rviz" args="-d $(find fingers_controller)/config/rviz/object.rviz" />
+
+    
+ </launch>

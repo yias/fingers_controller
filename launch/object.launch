@@ -95,30 +95,15 @@
 
     <group ns="object">
         <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find fingers_controller)/models/objects/$(arg OBJECT).urdf.xacro'"/> 
-        <node pkg="robot_state_publisher" type="robot_state_publisher" name="object_state_publisher" output="screen"/>
-        <node name="joint_states" pkg="joint_state_publisher" type="joint_state_publisher"/>
-        
+        <node name="object_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen"/>
+        <!-- <node name="joint_states" pkg="joint_state_publisher" type="joint_state_publisher"/> -->
+        <node name="obj_motion_gen_node" pkg="fingers_controller" type="obj_motion_gen_node"/>
     </group>
 
     
-    <node pkg="tf" type="static_transform_publisher" name="allegro_object_broadcaster" args="0 0 0 0 0 0 1 hand_root obj_base 100" />
+    <node pkg="tf" type="static_transform_publisher" name="allegro_object_broadcaster1" args="0.1 -0.02 0.105 0 0 0 1 hand_root obj_base 100" />
 
-    <group>
-        <node name="rviz_$(arg NUM)" pkg="rviz" type="rviz" args="-d $(find fingers_controller)/config/rviz/allegro_object.rviz" >
-        </node>
-    </group>
-
-
-    <!-- <node name="gazebo" pkg="gazebo" type="gazebo" args="$(find fingers_controller)/config/experiment_1.world" respawn="false" output="screen"/> -->
-    <!-- <include file="$(find gazebo_ros)/launch/empty_world.launch">
-        <arg name="world_name" value="$(find fingers_controller)/config/experiment_1.world"/>
-        <arg name="paused" value="false"/>
-        <arg name="use_sim_time" value="true"/>
-        <arg name="gui" value="true"/>
-        <arg name="headless" value="false"/>
-        <arg name="debug" value="false"/>
-    </include> -->
-   
-
+    <node name="rviz_$(arg NUM)" pkg="rviz" type="rviz" args="-d $(find fingers_controller)/config/rviz/allegro_object.rviz" />
+    
     
  </launch>
