@@ -1,4 +1,11 @@
-
+/** 
+ *  Copyright (c) 2020 Iason Batzianoulis  
+ * 
+ *  Developer:  Iason Batzianoulis
+ *  email:      iasonbatz@gmail.com
+ *  License:    GNU GPL v3
+ * 
+**/
 
 #include "ros/ros.h"
 #include "geometry_msgs/PoseStamped.h"
