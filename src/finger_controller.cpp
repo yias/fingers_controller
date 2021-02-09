@@ -1,5 +1,5 @@
 /** 
- *  Copyright (c) 2020 Iason Batzianoulis
+ *  Copyright (c) 2021 Iason Batzianoulis
  *  
  * 
  *  Developer:  Iason Batzianoulis
@@ -102,10 +102,10 @@ void updateFingersPose(const geometry_msgs::PoseArray& msg){
     */
 //    std::cout<< "in "
     for (int fngr=0; fngr<(int)_fingersPosition.size(); fngr++){
-        for (int i=0; i< msg.poses.size(); i++){
+        // for (int i=0; i< msg.poses.size(); i++){
             _fingersPosition[fngr] << msg.poses[fngr].position.x, msg.poses[fngr].position.y, msg.poses[fngr].position.z;
             _fingersOrientation[fngr] << msg.poses[fngr].orientation.w, msg.poses[fngr].orientation.x, msg.poses[fngr].orientation.y, msg.poses[fngr].orientation.z;
-        }
+        // }
     }
 
 }

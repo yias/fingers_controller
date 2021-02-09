@@ -1,0 +1,26 @@
+# parameters of obstacles and the target
+# for the allegro hand, the order of the fingers is index, middle, pinky, thumb 17.0, -106.0, -123.0
+
+ft_init_positions: # fingertips' positions with respect to the base of the hand in meters (xyz) - hand open
+  - [0.05, -0.054, 0.21]
+  - [0.05, -0.0, 0.21]
+  - [0.05, 0.053, 0.21]
+  - [0.12, -0.08, 0.03]
+ft_init_orientations: # fingertips' orientations with respect to the base of the hand in Euler angles (ZYX) [degrees] - hand open
+  - [0.0, 60.0, 0.0]
+  - [0.0, 60.0, 0.0]
+  - [0.0, 60.0, 0.0]
+  - [123.0, -45.0, 17.0]
+ft_final_positions: # fingertips' positions with respect to the base of the hand in meters (xyz) - hand open
+  - [0.10, -0.05, 0.12]
+  - [0.10, 0.0, 0.12]
+  - [0.10, 0.05, 0.12]
+  - [0.11, -0.03, 0.09]
+ft_final_orientations: # fingertips' orientations with respect to the base of the hand in Euler angles (ZYX) [degrees] - hand open
+  - [0.0, 120.0, 0.0]
+  - [0.0, 120.0, 0.0]
+  - [0.0, 120.0, 0.0]
+  - [180.0, -25.0, 0.0]
+nb_tactile_sensors: 3
+max_torque: 5.0
+a_force : 0.5

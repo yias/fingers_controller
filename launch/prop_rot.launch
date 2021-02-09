@@ -1,0 +1,10 @@
+<launch>
+
+  <rosparam file="$(find fingers_controller)/cfg/prop_rot/prop_rot_params.yaml" />
+
+  <node name="prop_rot_node" pkg="fingers_controller" type="prop_rot_controller" output="screen">
+   
+  </node>
+
+
+</launch>

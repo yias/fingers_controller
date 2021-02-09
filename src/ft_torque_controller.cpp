@@ -202,7 +202,7 @@ int main(int argc, char** argv){
     open_orientation[3] = thumb_target_orient;
 
     // close configuration position
-    index_torque = Eigen::Vector3d(-0.30, 0.2, 0.0);
+    index_torque = Eigen::Vector3d(0.00, 0.4, -0.3);
     index_target_orient = ToQuaternion(0.0, 0.0, 0.0);
 
     middle_torque = Eigen::Vector3d(0.0, 0.0, 0.0);

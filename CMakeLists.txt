@@ -65,3 +65,13 @@ add_executable(fbft_controller src/fingers_biotac_ft.cpp)
 target_include_directories(fbft_controller PUBLIC include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
 target_link_libraries(fbft_controller ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
 add_dependencies(fbft_controller ${PROJECT_NAME}_gencpp)
+
+add_executable(prop_rot_controller src/fnPropRot.cpp)
+target_include_directories(prop_rot_controller PUBLIC include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
+target_link_libraries(prop_rot_controller ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
+add_dependencies(prop_rot_controller ${PROJECT_NAME}_gencpp)
+
+add_executable(test_prop src/test_prop_controller.cpp)
+target_include_directories(test_prop PUBLIC include ${catkin_INCLUDE_DIRS} ${Eigen3_INCLUDE_DIRS})
+target_link_libraries(test_prop ${catkin_LIBRARIES} ${Eigen3_LIBRARIES})
+add_dependencies(test_prop ${PROJECT_NAME}_gencpp)
